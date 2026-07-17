@@ -37,6 +37,7 @@ interface FastMoneyState {
   questions: QuestionData[]
   entries: FastMoneyEntry[][] // [pass][questionIndex]
   activePass: 0 | 1
+  currentIndex: number // question being asked right now, -1 = none yet
 }
 
 /** Phases in which revealing an answer adds its points to the round pot. */
@@ -61,6 +62,8 @@ export class Game {
   ]
 
   question: QuestionData | null = null
+  /** The prompt stays hidden from players/TV until the host shows it. */
+  questionVisible = false
   revealed: boolean[] = []
   strikes = 0
   /** Raw sum of revealed answer points this round (multiplier applied at award time). */
@@ -147,6 +150,7 @@ export class Game {
     const q = this.bank.find((q) => q.id === questionId)
     if (!q) return
     this.question = q
+    this.questionVisible = false
     this.revealed = q.answers.map(() => false)
     this.strikes = 0
     this.pot = 0
@@ -162,6 +166,7 @@ export class Game {
     // A canceled question was never actually played — make it pickable again.
     if (this.question) this.usedQuestionIds.delete(this.question.id)
     this.question = null
+    this.questionVisible = false
     this.revealed = []
     this.strikes = 0
     this.pot = 0
@@ -172,6 +177,11 @@ export class Game {
 
   setMultiplier(m: number) {
     if (m === 1 || m === 2 || m === 3) this.multiplier = m
+  }
+
+  /** Put the question prompt up on the TV and player phones. */
+  showQuestion() {
+    if (this.question) this.questionVisible = true
   }
 
   // ---- face-off / buzzers ----
@@ -280,6 +290,7 @@ export class Game {
   nextRound() {
     this.round += 1
     this.question = null
+    this.questionVisible = false
     this.revealed = []
     this.strikes = 0
     this.pot = 0
@@ -306,15 +317,27 @@ export class Game {
         questions.map(() => ({ answerIndex: null, text: null, points: 0, revealed: false })),
       ),
       activePass: 0,
+      currentIndex: -1,
     }
     this.question = null
+    this.questionVisible = false
     this.revealed = []
     this.faceoff = null
     this.phase = 'fastmoney'
   }
 
   fmSetActivePass(pass: 0 | 1) {
-    if (this.fastMoney) this.fastMoney.activePass = pass
+    if (!this.fastMoney) return
+    this.fastMoney.activePass = pass
+    // New pass starts with no question up — the host re-asks them one by one.
+    this.fastMoney.currentIndex = -1
+  }
+
+  /** Show one fast money question to the players/TV (-1 hides them all). */
+  fmSetCurrent(index: number) {
+    const fm = this.fastMoney
+    if (!fm || this.phase !== 'fastmoney') return
+    if (index >= -1 && index < fm.questions.length) fm.currentIndex = index
   }
 
   /** Host matches what the player said to a bank answer (-1 = no match, 0 points). */
@@ -360,9 +383,12 @@ export class Game {
     if (!this.fastMoney) return null
     const fm = this.fastMoney
     return {
-      questions: fm.questions.map((q) =>
-        isHost ? { prompt: q.prompt, answers: q.answers } : { prompt: q.prompt },
+      questions: fm.questions.map((q, i) =>
+        isHost
+          ? { prompt: q.prompt, answers: q.answers }
+          : { prompt: i === fm.currentIndex ? q.prompt : '' },
       ),
+      currentIndex: fm.currentIndex,
       entries: fm.entries.map((pass) =>
         pass.map((e) => ({
           revealed: e.revealed,
@@ -399,7 +425,7 @@ export class Game {
       })),
       question: this.question
         ? {
-            prompt: this.question.prompt,
+            prompt: isHost || this.questionVisible ? this.question.prompt : null,
             slots: this.question.answers.map((a, i) => ({
               index: i,
               revealed: this.revealed[i],
@@ -408,6 +434,7 @@ export class Game {
             })),
           }
         : null,
+      questionVisible: this.questionVisible,
       strikes: this.strikes,
       bank: this.pot * this.multiplier,
       controllingTeam: this.controllingTeam,

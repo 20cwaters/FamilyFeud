@@ -49,19 +49,33 @@ export function PlayerView({ state, onLeave }: { state: ClientGameState; onLeave
       {state.phase === 'fastmoney' && state.fastMoney && (
         <div className="flex-1 space-y-2">
           <div className="text-center text-xl font-black uppercase italic text-yellow-400">Fast Money</div>
-          {state.fastMoney.questions.map((q, qi) => (
-            <div key={qi} className="rounded-lg border border-slate-800 bg-slate-900 px-3 py-2 text-sm">
-              <div className="text-slate-300">{qi + 1}. {q.prompt}</div>
-              <div className="mt-1 flex gap-2">
-                {[0, 1].map((pass) => {
-                  const e = state.fastMoney!.entries[pass][qi]
-                  return (
-                    <div key={pass} className="flex-1 rounded bg-slate-800 px-2 py-1 font-bold text-white">
-                      {e.revealed ? `${e.text} — ${e.points}` : '···'}
-                    </div>
-                  )
-                })}
-              </div>
+          <div className="rounded-lg bg-blue-800 px-3 py-2 text-center font-bold leading-snug text-white">
+            {state.fastMoney.currentIndex >= 0 ? (
+              <>
+                <span className="mr-2 text-yellow-300">Q{state.fastMoney.currentIndex + 1}/5</span>
+                {state.fastMoney.questions[state.fastMoney.currentIndex].prompt}
+              </>
+            ) : (
+              <span className="animate-pulse text-sky-300/80">Get ready…</span>
+            )}
+          </div>
+          {state.fastMoney.questions.map((_q, qi) => (
+            <div key={qi} className="flex items-center gap-2 text-sm">
+              <span
+                className={`w-5 text-center font-black ${
+                  state.fastMoney!.currentIndex === qi ? 'text-yellow-400' : 'text-slate-600'
+                }`}
+              >
+                {qi + 1}
+              </span>
+              {[0, 1].map((pass) => {
+                const e = state.fastMoney!.entries[pass][qi]
+                return (
+                  <div key={pass} className="flex-1 truncate rounded bg-slate-800 px-2 py-1 font-bold text-white">
+                    {e.revealed ? `${e.text} — ${e.points}` : '···'}
+                  </div>
+                )
+              })}
             </div>
           ))}
           <div className="text-center text-2xl font-black text-yellow-300 tabular-nums">
@@ -73,7 +87,9 @@ export function PlayerView({ state, onLeave }: { state: ClientGameState; onLeave
       {state.question && state.phase !== 'fastmoney' && (
         <div className="flex-1 space-y-3">
           <div className="rounded-lg bg-blue-800 px-3 py-2 text-center font-bold uppercase leading-snug text-white">
-            {state.question.prompt}
+            {state.question.prompt ?? (
+              <span className="animate-pulse text-sky-300/80">🤫 Listen for the question…</span>
+            )}
           </div>
           <Board slots={state.question.slots} size="phone" />
           <div className="flex items-center justify-between text-sm">
@@ -188,9 +204,13 @@ function BuzzerScreen({ state }: { state: ClientGameState }) {
         <div className="mt-1 text-xl font-black text-white">
           {f.aName} vs {f.bName}
         </div>
-        {state.question && (
+        {state.question?.prompt ? (
           <div className="mt-3 max-w-sm rounded-lg bg-blue-900/60 px-4 py-2 font-semibold text-sky-200">
             {state.question.prompt}
+          </div>
+        ) : (
+          <div className="mt-3 max-w-sm rounded-lg bg-blue-900/40 px-4 py-2 font-semibold text-sky-300/70">
+            🤫 Listen for the question…
           </div>
         )}
       </div>

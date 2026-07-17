@@ -56,7 +56,11 @@ export function TVView({ state }: { state: ClientGameState }) {
         {state.phase !== 'lobby' && state.phase !== 'fastmoney' && state.question && (
           <>
             <div className="rounded-xl bg-gradient-to-r from-blue-800 via-blue-700 to-blue-800 px-[2vw] py-[1vw] text-center text-[2.4vw] font-black uppercase leading-tight text-white shadow-lg">
-              {state.question.prompt}
+              {state.question.prompt ?? (
+                <span className="animate-pulse tracking-[0.3em] text-sky-300/80">
+                  🤫 Listen up — question coming…
+                </span>
+              )}
             </div>
             <div className="mt-[1.5vw] flex-1">
               <Board slots={state.question.slots} size="tv" />
@@ -193,28 +197,43 @@ function LobbyScreen({ state }: { state: ClientGameState }) {
 
 function FastMoneyBoard({ state }: { state: ClientGameState }) {
   const fm = state.fastMoney!
+  const current = fm.currentIndex >= 0 ? fm.questions[fm.currentIndex] : null
   return (
     <div className="flex flex-1 flex-col">
       <div className="text-center text-[3vw] font-black uppercase italic text-yellow-400">Fast Money</div>
-      <div className="mx-auto mt-[1.5vw] w-full max-w-[80vw] flex-1 space-y-[1vw]">
-        {fm.questions.map((q, qi) => (
-          <div key={qi} className="grid grid-cols-[1fr_14vw_14vw] items-center gap-[1vw]">
-            <div className="truncate text-[1.6vw] font-bold text-slate-300">
-              {qi + 1}. {q.prompt}
+      <div className="mx-auto mt-[1vw] w-full max-w-[76vw] rounded-xl bg-gradient-to-r from-blue-800 via-blue-700 to-blue-800 px-[2vw] py-[1vw] text-center text-[2vw] font-black uppercase leading-tight text-white shadow-lg">
+        {current ? (
+          <>
+            <span className="mr-[1vw] text-yellow-300">Q{fm.currentIndex + 1}/5</span>
+            {current.prompt}
+          </>
+        ) : (
+          <span className="animate-pulse tracking-[0.3em] text-sky-300/80">Get ready…</span>
+        )}
+      </div>
+      <div className="mx-auto mt-[1.5vw] w-full max-w-[76vw] flex-1 space-y-[1vw]">
+        {fm.questions.map((_q, qi) => (
+          <div key={qi} className="grid grid-cols-[4vw_1fr_1fr] items-center gap-[1vw]">
+            <div
+              className={`text-center text-[2vw] font-black ${
+                fm.currentIndex === qi ? 'text-yellow-300' : 'text-slate-500'
+              }`}
+            >
+              {qi + 1}
             </div>
             {[0, 1].map((pass) => {
               const e = fm.entries[pass][qi]
               return (
                 <div
                   key={pass}
-                  className={`flex items-center justify-between rounded-lg border-2 px-[1vw] py-[0.6vw] ${
+                  className={`flex items-center justify-between rounded-lg border-2 px-[1.2vw] py-[0.7vw] ${
                     e.revealed ? 'animate-flip border-sky-300/60 bg-gradient-to-b from-sky-600 to-blue-800' : 'border-blue-700 bg-blue-950'
                   }`}
                 >
-                  <span className="truncate text-[1.4vw] font-bold uppercase text-white">
+                  <span className="truncate text-[1.6vw] font-bold uppercase text-white">
                     {e.revealed ? e.text : '···'}
                   </span>
-                  <span className="ml-2 text-[1.4vw] font-black text-yellow-300 tabular-nums">
+                  <span className="ml-2 text-[1.6vw] font-black text-yellow-300 tabular-nums">
                     {e.revealed ? e.points : ''}
                   </span>
                 </div>

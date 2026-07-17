@@ -584,7 +584,24 @@ function PlayPanel({ state }: { state: ClientGameState }) {
 function AnswerPanel({ state }: { state: ClientGameState }) {
   if (!state.question) return null
   return (
-    <Section title={state.question.prompt}>
+    <Section
+      title={state.question.prompt ?? ''}
+      right={
+        state.questionVisible ? (
+          <span className="text-xs font-bold text-green-500">on screens ✓</span>
+        ) : (
+          <span className="text-xs font-bold text-amber-400">hidden from players</span>
+        )
+      }
+    >
+      {!state.questionVisible && (
+        <button
+          onClick={() => send('host_show_question')}
+          className="mb-3 w-full rounded-xl bg-amber-400 py-3 font-black uppercase text-blue-950 active:scale-95"
+        >
+          👁 Show question on TV &amp; phones
+        </button>
+      )}
       <div className="space-y-1.5">
         {state.question.slots.map((slot) => (
           <div
@@ -644,18 +661,33 @@ function FastMoneyPanel({ state }: { state: ClientGameState }) {
       <div className="space-y-3">
         {fm.questions.map((q, qi) => {
           const entry = fm.entries[fm.activePass][qi]
+          const isCurrent = fm.currentIndex === qi
           const dup =
             fm.activePass === 1 &&
             entry.answerIndex !== null &&
             entry.answerIndex >= 0 &&
             fm.entries[0][qi].answerIndex === entry.answerIndex
           return (
-            <div key={qi} className="rounded-lg bg-slate-900 p-3">
+            <div
+              key={qi}
+              className={`rounded-lg p-3 ${isCurrent ? 'bg-purple-950/60 ring-2 ring-purple-500' : 'bg-slate-900'}`}
+            >
               <div className="text-sm font-bold text-slate-200">
                 {qi + 1}. {q.prompt}
+                {isCurrent && (
+                  <span className="ml-2 text-xs font-black uppercase text-purple-400">on screens</span>
+                )}
                 {dup && <span className="ml-2 text-xs font-black text-red-400">⚠ duplicate of player 1</span>}
               </div>
               <div className="mt-2 flex gap-2">
+                <button
+                  onClick={() => send('host_fm_set_current', { index: isCurrent ? -1 : qi })}
+                  className={`w-16 rounded py-2 text-xs font-black uppercase active:scale-95 ${
+                    isCurrent ? 'bg-purple-600 text-white' : 'bg-slate-700 text-slate-200'
+                  }`}
+                >
+                  {isCurrent ? 'Hide' : '📢 Ask'}
+                </button>
                 <select
                   value={entry.answerIndex ?? ''}
                   onChange={(e) =>

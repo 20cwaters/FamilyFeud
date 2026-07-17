@@ -64,11 +64,13 @@ export interface FastMoneyEntryView {
 }
 
 export interface FastMoneyView {
-  /** answers included for the host only. */
+  /** Prompts are blanked for non-hosts except the current question; answers are host-only. */
   questions: { prompt: string; answers?: AnswerData[] }[]
   /** entries[pass][questionIndex], pass 0 = first player, pass 1 = second player. */
   entries: FastMoneyEntryView[][]
   activePass: 0 | 1
+  /** Which question is being asked right now (-1 = none yet). */
+  currentIndex: number
   revealedTotal: number
 }
 
@@ -88,7 +90,10 @@ export interface ClientGameState {
   multiplier: number
   teams: [TeamState, TeamState]
   members: MemberInfo[]
-  question: { prompt: string; slots: BoardSlot[] } | null
+  /** prompt is null for non-hosts until the host shows the question. */
+  question: { prompt: string | null; slots: BoardSlot[] } | null
+  /** Whether the current question's prompt is visible to players and the TV. */
+  questionVisible: boolean
   strikes: number
   /** Current round pot with the multiplier applied (what gets banked). */
   bank: number

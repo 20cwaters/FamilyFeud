@@ -275,6 +275,29 @@ describe('scoring and rounds', () => {
     expect(g.toStateFor('p1')!.question?.slots.every((s) => !s.revealed)).toBe(true)
   })
 
+  it('hides the question prompt from players and the TV until the host shows it', () => {
+    const g = makeGame()
+    g.selectQuestion('tq1')
+    expect(g.toStateFor('p1')!.question?.prompt).toBeNull()
+    expect(g.toStateFor('tv1')!.question?.prompt).toBeNull()
+    expect(g.toStateFor('host1')!.question?.prompt).toBe('Test question one')
+    expect(g.toStateFor('tv1')!.questionVisible).toBe(false)
+    g.showQuestion()
+    expect(g.toStateFor('p1')!.question?.prompt).toBe('Test question one')
+    expect(g.toStateFor('tv1')!.questionVisible).toBe(true)
+  })
+
+  it('a newly selected question starts hidden again', () => {
+    const g = makeGame()
+    g.selectQuestion('tq1')
+    g.showQuestion()
+    g.setControl(1)
+    g.awardPot(1)
+    g.nextRound()
+    g.selectQuestion('tq2')
+    expect(g.toStateFor('p1')!.question?.prompt).toBeNull()
+  })
+
   it('canceling a question makes it pickable again', () => {
     const g = makeGame()
     g.selectQuestion('tq1')
@@ -342,6 +365,35 @@ describe('fast money', () => {
     g.endFastMoney()
     expect(g.phase).toBe('lobby')
     expect(g.fastMoney).toBeNull()
+  })
+
+  it('shows prompts to players/TV one at a time as the host advances', () => {
+    const g = makeGame()
+    g.startFastMoney()
+    let tv = g.toStateFor('tv1')!.fastMoney!
+    expect(tv.currentIndex).toBe(-1)
+    expect(tv.questions.every((q) => q.prompt === '')).toBe(true)
+
+    g.fmSetCurrent(0)
+    tv = g.toStateFor('tv1')!.fastMoney!
+    expect(tv.questions[0].prompt).not.toBe('')
+    expect(tv.questions.slice(1).every((q) => q.prompt === '')).toBe(true)
+
+    g.fmSetCurrent(1)
+    tv = g.toStateFor('tv1')!.fastMoney!
+    expect(tv.questions[0].prompt).toBe('') // previous one goes back down
+    expect(tv.questions[1].prompt).not.toBe('')
+
+    // The host always sees every prompt.
+    expect(g.toStateFor('host1')!.fastMoney!.questions.every((q) => q.prompt !== '')).toBe(true)
+
+    // Switching to the second pass starts with no question up again.
+    g.fmSetActivePass(1)
+    expect(g.toStateFor('tv1')!.fastMoney!.currentIndex).toBe(-1)
+
+    // Out-of-range indexes are ignored.
+    g.fmSetCurrent(99)
+    expect(g.toStateFor('tv1')!.fastMoney!.currentIndex).toBe(-1)
   })
 
   it('cannot reveal an entry before an answer is set', () => {
