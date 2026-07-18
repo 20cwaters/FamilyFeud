@@ -50,6 +50,21 @@ body {
   backface-visibility: hidden;
 }
 
+/* Slow-rotating sunburst behind the join screen. The translate must live in the
+   keyframes because the animation's transform would otherwise override it. */
+.animate-sunburst {
+  animation: sunburst-spin 90s linear infinite;
+}
+
+@keyframes sunburst-spin {
+  from {
+    transform: translate(-50%, -50%) rotate(0deg);
+  }
+  to {
+    transform: translate(-50%, -50%) rotate(360deg);
+  }
+}
+
 @keyframes buzz-pulse {
   0%,
   100% {

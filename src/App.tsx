@@ -108,6 +108,83 @@ export default function App() {
   )
 }
 
+/** Game-show oval badge, drawn in SVG so it scales crisply with no image assets. */
+function FeudLogo({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 440 260" className={className} role="img" aria-label="Family Feud">
+      <defs>
+        <linearGradient id="ffGold" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fde68a" />
+          <stop offset="0.45" stopColor="#facc15" />
+          <stop offset="1" stopColor="#b45309" />
+        </linearGradient>
+        <linearGradient id="ffBlue" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#38bdf8" />
+          <stop offset="0.5" stopColor="#1d4ed8" />
+          <stop offset="1" stopColor="#172554" />
+        </linearGradient>
+        <linearGradient id="ffText" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stopColor="#fef9c3" />
+          <stop offset="0.6" stopColor="#fbbf24" />
+          <stop offset="1" stopColor="#d97706" />
+        </linearGradient>
+      </defs>
+
+      {/* rays bursting out from behind the oval */}
+      <g opacity="0.3" fill="#facc15">
+        {Array.from({ length: 12 }, (_, i) => (
+          <polygon key={i} points="212,-60 228,-60 220,130" transform={`rotate(${i * 30} 220 130)`} />
+        ))}
+      </g>
+
+      {/* stacked ovals: shadow, gold rim, navy ring, blue face, top shine */}
+      <ellipse cx="225" cy="139" rx="196" ry="104" fill="#060b18" opacity="0.85" />
+      <ellipse cx="220" cy="130" rx="196" ry="104" fill="url(#ffGold)" />
+      <ellipse cx="220" cy="130" rx="181" ry="91" fill="#172554" />
+      <ellipse cx="220" cy="130" rx="174" ry="85" fill="url(#ffBlue)" />
+      <ellipse cx="220" cy="88" rx="140" ry="38" fill="#ffffff" opacity="0.14" />
+
+      <text
+        x="220"
+        y="120"
+        textAnchor="middle"
+        fontFamily="'Arial Black', 'Segoe UI', sans-serif"
+        fontWeight="900"
+        fontStyle="italic"
+        fontSize="54"
+        letterSpacing="3"
+        fill="url(#ffText)"
+        stroke="#78350f"
+        strokeWidth="2.5"
+        paintOrder="stroke"
+      >
+        FAMILY
+      </text>
+      <text
+        x="220"
+        y="196"
+        textAnchor="middle"
+        fontFamily="'Arial Black', 'Segoe UI', sans-serif"
+        fontWeight="900"
+        fontStyle="italic"
+        fontSize="76"
+        letterSpacing="6"
+        fill="url(#ffText)"
+        stroke="#78350f"
+        strokeWidth="3"
+        paintOrder="stroke"
+      >
+        FEUD
+      </text>
+
+      {/* sparkles */}
+      <path d="M78 46 l7 16 16 7 -16 7 -7 16 -7 -16 -16 -7 16 -7 z" fill="#fef9c3" opacity="0.9" />
+      <path d="M372 200 l5 11 11 5 -11 5 -5 11 -5 -11 -11 -5 11 -5 z" fill="#fef9c3" opacity="0.75" />
+      <path d="M398 92 l4 9 9 4 -9 4 -4 9 -4 -9 -9 -4 9 -4 z" fill="#fef9c3" opacity="0.6" />
+    </svg>
+  )
+}
+
 function JoinScreen({ error, onStart }: { error: string; onStart: (s: Session) => void }) {
   const [name, setName] = useState(localStorage.getItem('ff-name') ?? '')
   const [code, setCode] = useState('')
@@ -140,14 +217,48 @@ function JoinScreen({ error, onStart }: { error: string; onStart: (s: Session) =
   const message = localError || error
 
   return (
-    <div className="flex min-h-full items-center justify-center bg-gradient-to-b from-blue-950 via-slate-950 to-black p-6">
-      <div className="w-full max-w-sm">
-        <h1 className="text-center text-5xl font-black uppercase italic tracking-tight">
-          <span className="text-yellow-400">Family</span> <span className="text-sky-400">Feud</span>
-        </h1>
-        <p className="mt-1 text-center text-sm text-slate-400">Couch-party edition</p>
+    <div className="relative flex min-h-full items-center justify-center overflow-hidden bg-[#050b1f] p-6">
+      {/* rotating sunburst, stage-light glows, and a vignette */}
+      <div
+        className="animate-sunburst pointer-events-none absolute left-1/2 top-1/2 h-[250vmax] w-[250vmax]"
+        style={{
+          background:
+            'repeating-conic-gradient(from 0deg, rgba(250,204,21,0.09) 0deg 6deg, rgba(59,130,246,0.06) 6deg 12deg, transparent 12deg 24deg)',
+        }}
+      />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{
+          background:
+            'radial-gradient(ellipse at 50% 30%, rgba(37,99,235,0.35), transparent 55%), radial-gradient(ellipse at 50% 115%, rgba(30,58,138,0.5), transparent 60%)',
+        }}
+      />
+      <div
+        className="pointer-events-none absolute inset-0"
+        style={{ background: 'radial-gradient(ellipse at center, transparent 40%, rgba(2,6,23,0.92) 100%)' }}
+      />
+      <div className="pointer-events-none absolute left-[10%] top-[12%] h-44 w-44 animate-pulse rounded-full bg-yellow-400/10 blur-3xl" />
+      <div className="pointer-events-none absolute right-[8%] top-[22%] h-56 w-56 animate-pulse rounded-full bg-sky-500/10 blur-3xl [animation-delay:1.2s]" />
+      <div className="pointer-events-none absolute bottom-[8%] left-[18%] h-52 w-52 animate-pulse rounded-full bg-blue-600/10 blur-3xl [animation-delay:2.4s]" />
 
-        <div className="mt-8 space-y-3">
+      <div className="relative w-full max-w-sm">
+        <FeudLogo className="mx-auto w-72 max-w-full drop-shadow-[0_12px_35px_rgba(250,204,21,0.3)] md:w-80" />
+        <p className="mt-3 text-center text-xs font-bold uppercase tracking-[0.4em] text-sky-300/80">
+          Couch-party edition
+        </p>
+        <div className="mt-3 flex justify-center gap-2" aria-hidden>
+          {[-6, 3, -2].map((tilt, i) => (
+            <span
+              key={i}
+              style={{ transform: `rotate(${tilt}deg)` }}
+              className="flex h-7 w-7 items-center justify-center rounded-md border-2 border-red-500/60 bg-red-500/10 font-black text-red-500/80"
+            >
+              X
+            </span>
+          ))}
+        </div>
+
+        <div className="mt-5 space-y-3 rounded-2xl border border-sky-400/20 bg-slate-950/70 p-5 shadow-[0_0_60px_rgba(30,64,175,0.35)] backdrop-blur">
           <input
             value={name}
             onChange={(e) => setName(e.target.value)}
@@ -158,7 +269,7 @@ function JoinScreen({ error, onStart }: { error: string; onStart: (s: Session) =
           <button
             onClick={createRoom}
             disabled={busy}
-            className="w-full rounded-xl bg-yellow-400 py-3 text-lg font-black uppercase tracking-wide text-blue-950 active:scale-95 disabled:opacity-50"
+            className="w-full rounded-xl bg-gradient-to-b from-yellow-300 to-amber-500 py-3 text-lg font-black uppercase tracking-wide text-blue-950 shadow-lg shadow-amber-900/40 active:scale-95 disabled:opacity-50"
           >
             Create room (host)
           </button>
@@ -177,7 +288,7 @@ function JoinScreen({ error, onStart }: { error: string; onStart: (s: Session) =
           <div className="grid grid-cols-2 gap-3">
             <button
               onClick={() => join('player')}
-              className="rounded-xl bg-sky-500 py-3 font-black uppercase text-white active:scale-95"
+              className="rounded-xl bg-gradient-to-b from-sky-400 to-blue-600 py-3 font-black uppercase text-white shadow-lg shadow-blue-950/50 active:scale-95"
             >
               Player
             </button>
