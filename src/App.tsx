@@ -190,6 +190,7 @@ function JoinScreen({ error, onStart }: { error: string; onStart: (s: Session) =
   const [code, setCode] = useState('')
   const [busy, setBusy] = useState(false)
   const [localError, setLocalError] = useState('')
+  const [tab, setTab] = useState<'join' | 'create'>('join')
 
   const createRoom = () => {
     if (!name.trim()) return setLocalError('Enter your name first.')
@@ -258,53 +259,87 @@ function JoinScreen({ error, onStart }: { error: string; onStart: (s: Session) =
           ))}
         </div>
 
-        <div className="mt-5 space-y-3 rounded-2xl border border-sky-400/20 bg-slate-950/70 p-5 shadow-[0_0_60px_rgba(30,64,175,0.35)] backdrop-blur">
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Your name"
-            maxLength={20}
-            className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-lg outline-none focus:border-sky-400"
-          />
-          <button
-            onClick={createRoom}
-            disabled={busy}
-            className="w-full rounded-xl bg-gradient-to-b from-yellow-300 to-amber-500 py-3 text-lg font-black uppercase tracking-wide text-blue-950 shadow-lg shadow-amber-900/40 active:scale-95 disabled:opacity-50"
-          >
-            Create room (host)
-          </button>
-
-          <div className="flex items-center gap-3 py-1 text-xs uppercase tracking-widest text-slate-500">
-            <div className="h-px flex-1 bg-slate-800" /> or join <div className="h-px flex-1 bg-slate-800" />
+        <div className="mt-5 overflow-hidden rounded-2xl border border-sky-400/20 bg-slate-950/70 shadow-[0_0_60px_rgba(30,64,175,0.35)] backdrop-blur">
+          <div className="flex border-b border-slate-800">
+            {(['join', 'create'] as const).map((t) => (
+              <button
+                key={t}
+                onClick={() => {
+                  setTab(t)
+                  setLocalError('')
+                }}
+                className={`flex-1 border-b-2 py-3 text-sm font-black uppercase tracking-wider ${
+                  tab === t
+                    ? 'border-yellow-400 bg-slate-900/70 text-yellow-400'
+                    : 'border-transparent text-slate-500'
+                }`}
+              >
+                {t === 'join' ? 'Join game' : 'Create game'}
+              </button>
+            ))}
           </div>
 
-          <input
-            value={code}
-            onChange={(e) => setCode(e.target.value.toUpperCase())}
-            placeholder="Room code"
-            maxLength={4}
-            className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-center text-2xl font-black uppercase tracking-[0.5em] outline-none focus:border-sky-400"
-          />
-          <div className="grid grid-cols-2 gap-3">
-            <button
-              onClick={() => join('player')}
-              className="rounded-xl bg-gradient-to-b from-sky-400 to-blue-600 py-3 font-black uppercase text-white shadow-lg shadow-blue-950/50 active:scale-95"
-            >
-              Player
-            </button>
-            <button
-              onClick={() => join('tv')}
-              className="rounded-xl bg-slate-700 py-3 font-black uppercase text-white active:scale-95"
-            >
-              TV screen
-            </button>
+          <div className="space-y-3 p-5">
+            {tab === 'join' ? (
+              <>
+                <p className="text-center text-xs text-slate-400">
+                  Enter the 4-letter code from the TV or your host.
+                </p>
+                <input
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.toUpperCase())}
+                  placeholder="CODE"
+                  maxLength={4}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-center text-2xl font-black uppercase tracking-[0.5em] outline-none focus:border-sky-400"
+                />
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your name"
+                  maxLength={20}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-lg outline-none focus:border-sky-400"
+                />
+                <button
+                  onClick={() => join('player')}
+                  className="w-full rounded-xl bg-gradient-to-b from-sky-400 to-blue-600 py-3 text-lg font-black uppercase text-white shadow-lg shadow-blue-950/50 active:scale-95"
+                >
+                  Join as player
+                </button>
+                <button
+                  onClick={() => join('tv')}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-800 py-2.5 font-bold uppercase text-slate-300 active:scale-95"
+                >
+                  📺 This device is the TV
+                </button>
+                <button
+                  onClick={() => join('host')}
+                  className="w-full py-1 text-center text-xs font-semibold text-slate-500 underline active:scale-95"
+                >
+                  Rejoin as host
+                </button>
+              </>
+            ) : (
+              <>
+                <p className="text-center text-xs text-slate-400">
+                  You'll be the host — you run questions, reveals, strikes, and scores from this device.
+                </p>
+                <input
+                  value={name}
+                  onChange={(e) => setName(e.target.value)}
+                  placeholder="Your name"
+                  maxLength={20}
+                  className="w-full rounded-xl border border-slate-700 bg-slate-900 px-4 py-3 text-lg outline-none focus:border-sky-400"
+                />
+                <button
+                  onClick={createRoom}
+                  disabled={busy}
+                  className="w-full rounded-xl bg-gradient-to-b from-yellow-300 to-amber-500 py-3 text-lg font-black uppercase tracking-wide text-blue-950 shadow-lg shadow-amber-900/40 active:scale-95 disabled:opacity-50"
+                >
+                  Create room
+                </button>
+              </>
+            )}
           </div>
-          <button
-            onClick={() => join('host')}
-            className="w-full rounded-xl border border-slate-700 py-2 text-sm font-bold uppercase text-slate-400 active:scale-95"
-          >
-            Rejoin as host
-          </button>
         </div>
 
         {message && <p className="mt-4 text-center font-semibold text-red-400">{message}</p>}
